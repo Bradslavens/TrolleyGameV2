@@ -1,0 +1,86 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #7c9473; /* Guacamole green */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+.container {
+    background-color: #f2eecb; /* Light guacamole color */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    margin-bottom: 20px;
+    color: #d9534f; /* Red color for the trolley cars */
+}
+
+.button-container {
+    margin-bottom: 20px;
+}
+
+.button {
+    display: inline-block;
+    margin: 10px;
+    padding: 15px 25px;
+    background-color: #d9534f; /* Red color for buttons */
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #c9302c;
+}
+
+.art-container {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    background-color: #7c9473; /* Guacamole green background */
+}
+
+.railroad-track {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background-color: #6f4e37; /* Brown for railroad tracks */
+}
+
+.trolley-car {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    width: 100px;
+    height: 50px;
+    background-color: #d9534f; /* Red trolley car */
+    transform: translateX(-50%);
+    border-radius: 5px;
+}
+
+.trolley-car:before, .trolley-car:after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    width: 20px;
+    height: 20px;
+    background-color: #6f4e37; /* Brown wheels */
+    border-radius: 50%;
+}
+
+.trolley-car:before {
+    left: 10px;
+}
+
+.trolley-car:after {
+    right: 10px;
+}

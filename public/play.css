@@ -1,0 +1,45 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #7c9473; /* Guacamole green background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+#gameCanvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+.control-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100px;
+    height: 50px;
+    background-color: #d9534f; /* Red for buttons */
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+#leftButton {
+    left: 10%;
+}
+
+#rightButton {
+    right: 10%;
+}
+
+.control-button:hover {
+    background-color: #c9302c;
+}
