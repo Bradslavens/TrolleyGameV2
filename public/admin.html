@@ -22,86 +22,90 @@
         <button id="addSignalButton">Add Signal</button>
     </div>
 
-    <script type="module">
-        // Firebase configuration
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
-        import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js";
+    <script>
+        // In-memory storage for lines and signals
+        const lines = {};
 
-        const firebaseConfig = {
-            
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        // Add Line
-        document.getElementById('addLineButton').addEventListener('click', () => {
-            const lineName = document.getElementById('lineName').value;
-            console.log(`Adding line: ${lineName}`);
-            if (lineName) {
-                set(ref(database, 'lines/' + lineName), {
-                    name: lineName,
-                    signals: []
-                }).then(() => {
-                    console.log(`Line ${lineName} added successfully.`);
-                    alert(`Line ${lineName} added successfully.`);
-                    document.getElementById('lineName').value = '';
-                    loadLines();
-                }).catch(error => {
-                    console.error("Error writing to database: ", error);
-                });
+        // Function to add a line
+        function addLine(lineName) {
+            if (!lines[lineName]) {
+                lines[lineName] = [];
+                alert(`Line ${lineName} added successfully.`);
+                loadLines();
             } else {
-                console.log("Line name is empty.");
+                alert(`Line ${lineName} already exists.`);
             }
-        });
+        }
+
+        // Function to get all lines
+        function getLines() {
+            return Object.keys(lines);
+        }
+
+        // Function to add a signal
+        function addSignal(lineName, signalName) {
+            if (lines[lineName]) {
+                lines[lineName].push(signalName);
+                alert(`Signal ${signalName} added to ${lineName} successfully.`);
+                loadSignals();
+            } else {
+                alert(`Line ${lineName} not found.`);
+            }
+        }
 
         // Load lines into the select dropdown
         function loadLines() {
-            console.log("Loading lines...");
             const lineSelect = document.getElementById('lineSelect');
             lineSelect.innerHTML = ''; // Clear current options
-            get(child(ref(database), 'lines')).then((snapshot) => {
-                snapshot.forEach((childSnapshot) => {
-                    const line = childSnapshot.val();
-                    const option = document.createElement('option');
-                    option.value = line.name;
-                    option.textContent = line.name;
-                    lineSelect.appendChild(option);
-                });
-                console.log("Lines loaded.");
-            }).catch(error => {
-                console.error("Error reading from database: ", error);
+            const lineNames = getLines();
+            lineNames.forEach((line) => {
+                const option = document.createElement('option');
+                option.value = line;
+                option.textContent = line;
+                lineSelect.appendChild(option);
             });
         }
 
-        // Add Signal
+        // Load signals into the signal list
+        function loadSignals() {
+            const lineName = document.getElementById('lineSelect').value;
+            const signalList = document.getElementById('signalList');
+            signalList.innerHTML = ''; // Clear current list
+            if (lines[lineName]) {
+                lines[lineName].forEach((signal) => {
+                    const li = document.createElement('li');
+                    li.textContent = signal;
+                    signalList.appendChild(li);
+                });
+            }
+        }
+
+        document.getElementById('addLineButton').addEventListener('click', () => {
+            const lineName = document.getElementById('lineName').value;
+            if (lineName) {
+                addLine(lineName);
+                document.getElementById('lineName').value = '';
+            } else {
+                alert("Line name is empty.");
+            }
+        });
+
         document.getElementById('addSignalButton').addEventListener('click', () => {
             const lineName = document.getElementById('lineSelect').value;
             const signalName = document.getElementById('signalName').value;
-            console.log(`Adding signal: ${signalName} to line: ${lineName}`);
             if (lineName && signalName) {
-                const lineRef = ref(database, 'lines/' + lineName + '/signals');
-                get(lineRef).then((snapshot) => {
-                    const signals = snapshot.val() || [];
-                    signals.push(signalName);
-                    set(lineRef, signals).then(() => {
-                        console.log(`Signal ${signalName} added to ${lineName} successfully.`);
-                        alert(`Signal ${signalName} added to ${lineName} successfully.`);
-                        document.getElementById('signalName').value = '';
-                    }).catch(error => {
-                        console.error("Error writing to database: ", error);
-                    });
-                }).catch(error => {
-                    console.error("Error reading from database: ", error);
-                });
+                addSignal(lineName, signalName);
+                document.getElementById('signalName').value = '';
             } else {
-                console.log("Line name or signal name is empty.");
+                alert("Line name or signal name is empty.");
             }
         });
 
         // Load lines on page load
-        window.onload = loadLines;
+        window.onload = () => {
+            loadLines();
+            document.getElementById('lineSelect').addEventListener('change', loadSignals);
+        };
     </script>
 </body>
 </html>

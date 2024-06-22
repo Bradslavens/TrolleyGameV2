@@ -1,75 +1,96 @@
 require('dotenv').config();
 
+// In-memory storage for lines and signals
+const lines = {};
 
-// Firebase configuration      
-const firebaseConfig = {
-    apiKey: process.env.API_KEY,
-    authDomain:  process.env.AUTH_DOMAIN,
-    databaseURL: process.env.DATABASE_URL,
-    projectId: process.env.PROJECT_ID,
-    storageBucket: process.env.STORAGE_BUCKET,
-    messagingSenderId: process.env.MESSAGING_SENDER_ID,
-    appId: process.env.APP_ID
-};
-
-// Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const database = firebase.database(app);
-
-// Add Line
-document.getElementById('addLineButton').addEventListener('click', () => {
-    const lineName = document.getElementById('lineName').value;
-    if (lineName) {
-        database.ref('lines/' + lineName).set({
-            name: lineName,
-            signals: []
-        }).then(() => {
-            alert(`Line ${lineName} added successfully.`);
-            document.getElementById('lineName').value = '';
-            loadLines();
-        }).catch(error => {
-            console.error("Error writing to database: ", error);
-        });
+// Function to add a line
+function addLine(lineName, callback) {
+    if (!lines[lineName]) {
+        lines[lineName] = [];
+        callback(null, `Line ${lineName} added successfully.`);
+    } else {
+        callback(new Error(`Line ${lineName} already exists.`));
     }
-});
-
-// Load lines into the select dropdown
-function loadLines() {
-    const lineSelect = document.getElementById('lineSelect');
-    lineSelect.innerHTML = ''; // Clear current options
-    database.ref('lines').once('value', (snapshot) => {
-        snapshot.forEach((childSnapshot) => {
-            const line = childSnapshot.val();
-            const option = document.createElement('option');
-            option.value = line.name;
-            option.textContent = line.name;
-            lineSelect.appendChild(option);
-        });
-    }).catch(error => {
-        console.error("Error reading from database: ", error);
-    });
 }
 
-// Add Signal
-document.getElementById('addSignalButton').addEventListener('click', () => {
-    const lineName = document.getElementById('lineSelect').value;
-    const signalName = document.getElementById('signalName').value;
-    if (lineName && signalName) {
-        const lineRef = database.ref('lines/' + lineName + '/signals');
-        lineRef.once('value', (snapshot) => {
-            const signals = snapshot.val() || [];
-            signals.push(signalName);
-            lineRef.set(signals).then(() => {
-                alert(`Signal ${signalName} added to ${lineName} successfully.`);
-                document.getElementById('signalName').value = '';
-            }).catch(error => {
-                console.error("Error writing to database: ", error);
-            });
-        }).catch(error => {
-            console.error("Error reading from database: ", error);
-        });
+// Function to get all lines
+function getLines(callback) {
+    const lineNames = Object.keys(lines);
+    callback(null, lineNames);
+}
+
+// Function to add a signal
+function addSignal(lineName, signalName, callback) {
+    if (lines[lineName]) {
+        lines[lineName].push(signalName);
+        callback(null, `Signal ${signalName} added to ${lineName} successfully.`);
+    } else {
+        callback(new Error(`Line ${lineName} not found.`));
     }
+}
+
+// Function to get signals for a line
+function getSignals(lineName, callback) {
+    if (lines[lineName]) {
+        callback(null, lines[lineName]);
+    } else {
+        callback(new Error(`Line ${lineName} not found.`));
+    }
+}
+
+// Express Server to Handle Requests
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(bodyParser.json());
+app.use(express.static('public'));
+
+// Add Line Endpoint
+app.post('/add-line', (req, res) => {
+    const lineName = req.body.lineName;
+    addLine(lineName, (err, message) => {
+        if (err) {
+            return res.status(500).json({ message: err.message });
+        }
+        res.json({ message });
+    });
 });
 
-// Load lines on page load
-window.onload = loadLines;
+// Get Lines Endpoint
+app.get('/get-lines', (req, res) => {
+    getLines((err, lines) => {
+        if (err) {
+            return res.status(500).json({ message: err.message });
+        }
+        res.json(lines);
+    });
+});
+
+// Add Signal Endpoint
+app.post('/add-signal', (req, res) => {
+    const { lineName, signalName } = req.body;
+    addSignal(lineName, signalName, (err, message) => {
+        if (err) {
+            return res.status(500).json({ message: err.message });
+        }
+        res.json({ message });
+    });
+});
+
+// Get Signals Endpoint
+app.get('/get-signals', (req, res) => {
+    const lineName = req.query.lineName;
+    getSignals(lineName, (err, signals) => {
+        if (err) {
+            return res.status(500).json({ message: err.message });
+        }
+        res.json(signals);
+    });
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
